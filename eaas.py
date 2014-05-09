@@ -4,11 +4,13 @@ import os
 import re
 
 from libmproxy import proxy, flow
-from src.aes import AESHelper
+import src.aes
 
 class EaaS(flow.FlowMaster):
 
 	def run(self):
+		self.aes = src.aes.AESHelper()
+
 		try:
 			flow.FlowMaster.run(self)
 		except:
@@ -22,9 +24,12 @@ class EaaS(flow.FlowMaster):
 			# /files_put
 			if(r.host == "api-content.dropbox.com" and r.path.startswith("/1/files_put/")):
 				try:
-					r.content = AESHelper.get_encrypted_content(r.content)
+					token = r.headers['Authorization'][0].split(" ")[1]
+					label = re.search("/1/files_put/sandbox/(.*\.md)", r.path)
+
+					r.content = self.aes.get_encrypted_content("Dropbox", r.content, token, label.group(1))
 				except	Exception as e:
-					print e
+					print "Exception: " + str(e)
 
 			r.reply()
 		return f
@@ -37,10 +42,13 @@ class EaaS(flow.FlowMaster):
 			# /files (GET)
 			if(r.request.host == "api-content.dropbox.com" and r.request.path.startswith("/1/files/")):				
 				try:
+					token = r.request.headers['Authorization'][0].split(" ")[1]
+					label = re.search("/1/files/sandbox/(.*\.md)", r.request.path)
 					#print "Content-Encoding: " + r.headers.get_first("content-encoding")
-					r.content = AESHelper.get_decrypted_content(r.content)
+
+					r.content = self.aes.get_decrypted_content("Dropbox", r.content, token, label.group(1))
 				except	Exception as e:
-					print e
+					print "Exception: " + str(e)
 
 			r.reply()
 		return f		

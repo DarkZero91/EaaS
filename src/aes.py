@@ -4,29 +4,26 @@ from Crypto.Cipher import AES
 from Crypto import Random
 import uuid
 
-from src.keymanager import KeyManager
+import src.keymanager
 
-class AESHelper:
-	keymanager = KeyManager()
-
-	@staticmethod
-	def get_encrypted_content(content):
-		identifier = uuid.uuid4().hex
-		key = AESHelper.keymanager.generate_key()
-		AESHelper.keymanager.store_key(identifier, key)
-		return AESHelper._encrypt(content, key, identifier)
+class AESHelper(object):
 	
-	@staticmethod
-	def get_decrypted_content(content):
-		identifier = content[0:32]
-		key = AESHelper.keymanager.load_key(identifier)
-		return AESHelper._decrypt(content[32:], key)
+	def __init__(self):
+		self.keymanager = src.keymanager.KeyManager()
 
-	@staticmethod	
-	def _encrypt(content, key, identifier):
+	def get_encrypted_content(self, host, content, token, label):
+		key = self.keymanager.get_key(host, token, label)
+		return AESHelper._encrypt(content, key)
+	
+	def get_decrypted_content(self, host, content, token, label):
+		key = self.keymanager.get_key(host, token, label)
+		return AESHelper._decrypt(content, key)
+
+	@staticmethod
+	def _encrypt(content, key):
 		iv = Random.new().read(AES.block_size)
 		cipher = AES.new(key, AES.MODE_CFB, iv)
-		return identifier + iv + cipher.encrypt(content)
+		return iv + cipher.encrypt(content)
 	
 	@staticmethod
 	def _decrypt(content, key):
