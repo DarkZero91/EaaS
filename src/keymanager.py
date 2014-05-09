@@ -6,6 +6,7 @@ import os.path
 import os
 
 # import src.aes
+from src.plugins.dropbox import Dropbox
 
 class KeyManager(object):
 	# self.master_key = "0123456789ABCDEF"
@@ -56,7 +57,7 @@ class KeyManager(object):
 		else:
 			if not os.path.isdir("keys/" + host):
 				os.mkdir("keys/" + host)
-			print "test"
+			
 			f = open(keystore, 'wb+')
 			f.close()
 			self.keys[host][token] = {}
@@ -76,7 +77,7 @@ class KeyManager(object):
 			self.identifiers[host] = {}		
 
 		if not token in self.identifiers[host]:
-			self.identifiers[host][token] = 12
-			# self.identifiers[host][token] = Plugin.get_identifier()
+			self.identifiers[host][token] = Dropbox.get_user_identifier(token)
+
 		return str(self.identifiers[host][token])
 	
