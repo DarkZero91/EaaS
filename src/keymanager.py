@@ -5,15 +5,12 @@ import pickle
 import os.path
 import os
 
-# import src.aes
+import src.aes
 from src.plugins.dropbox import Dropbox
 
 class KeyManager(object):
-	# self.master_key = "0123456789ABCDEF"
-	# src.aes.AESHelper._encrypt(key, self.master_key)
-	# src.aes.AESHelper._decrypt(key, self.master_key)
-
 	def __init__(self):
+		self.master_key = "0123456789ABCDEF"
 		self.identifiers = {} # {host: {token: identifier}}
 		self.keys = {} # {host: {token: {label: key}}}
 
@@ -28,10 +25,10 @@ class KeyManager(object):
 
 		if token in self.keys[host]:
 			if label in self.keys[host][token]:
-				return self.keys[host][token][label]
+				return src.aes.AESHelper._decrypt(self.keys[host][token][label], self.master_key)
 			else:
 				key = self._generate_key()
-				self.keys[host][token][label] = key
+				self.keys[host][token][label] = src.aes.AESHelper._encrypt(key, self.master_key)
 				self._store_keys(host, token)
 				return key
 		else:
